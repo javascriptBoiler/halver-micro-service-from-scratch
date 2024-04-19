@@ -1,16 +1,22 @@
-FROM node:alpine:latest As development
+FROM node:21-alpine As development
 
 WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm update -g npm
+
+RUN apk update && apk add curl
+
+RUN curl -v https://registry.npmjs.com/
+
+RUN npm install --verbose
 
 COPY . .
 
 RUN npm run build feedback
 
-FROM node:alpine:latest as production
+FROM node:21-alpine as production
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}

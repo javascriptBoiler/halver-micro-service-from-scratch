@@ -4,9 +4,13 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN cat package.json
+RUN npm update -g npm
 
-RUN npm install --loglevel verbose
+RUN apk update && apk add curl
+
+RUN curl -v https://registry.npmjs.com/
+
+RUN npm install --verbose
 
 COPY . .
 

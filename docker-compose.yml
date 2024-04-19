@@ -1,35 +1,35 @@
 services:
-  # products:
-  #   build:
-  #     context: .
-  #     dockerfile: ./apps/products/Dockerfile
-  #     target: development
-  #   command: npm run start:dev products
-  #   env_file:
-  #     - ./apps/products/.env
-  #   depends_on:
-  #     - postgres
-  #     - feedback
-  #     - auth
-  #   volumes:
-  #     - .:/usr/src/app
-  #     - /usr/src/app/node_modules
-  #   ports:
-  #     - '3000:3000'
-  # feedback:
-  #   build:
-  #     context: .
-  #     dockerfile: ./apps/feedback/Dockerfile
-  #     target: development
-  #   command: npm run start:dev feedback
-  #   env_file:
-  #     - ./apps/feedback/.env
-  #   depends_on:
-  #     - postgres
-  #     - auth
-  #   volumes:
-  #     - .:/usr/src/app
-  #     - /usr/src/app/node_modules
+  products:
+    build:
+      context: .
+      dockerfile: ./apps/products/Dockerfile
+      target: development
+    command: npm run start:dev products
+    env_file:
+      - ./apps/products/.env
+    depends_on:
+      - postgres
+      - feedback
+      - auth
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - '3000:3000'
+  feedback:
+    build:
+      context: .
+      dockerfile: ./apps/feedback/Dockerfile
+      target: development
+    command: npm run start:dev feedback
+    env_file:
+      - ./apps/feedback/.env
+    depends_on:
+      - postgres
+      - auth
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
   auth:
     build:
       context: .

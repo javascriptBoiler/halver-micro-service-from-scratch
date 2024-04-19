@@ -12,3 +12,198 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id                Int                   @id @default(autoincrement())
+  cognitoSub        String                @db.Text @map(name: "cognito_sub") @unique
+  email             String                @db.Text
+  image             String?               @db.Text
+  mobile            String?               @db.VarChar(100)
+  firstName         String?               @map(name: "first_name") @db.VarChar(100)
+  lastName          String?               @map(name: "last_name") @db.VarChar(100)
+  userLocation      String?               @db.Text @map(name: "user_location")
+  latitude          Float?
+  longitude         Float?
+  country           String?  
+  status            UserStates            @default(pending)
+  userRole          UserRoles             @default(user) @map(name: "user_role")
+  isDeleted         Boolean               @default(false) @map(name: "is_deleted")
+  isDeactivated     Boolean               @default(false) @map(name: "is_deactivated")
+  signupStatus      SignupStatus          @default(pending) @map(name: "signup_status")
+  userPoint         Float?                @map(name: "user_point")
+  hostedProducts    Product[]             @relation("productHasHostedUser")
+  consumeProducts   Product[]             @relation("productHasConsumer")
+  productRequest    ProductRequest[]      @relation("productRequestHasUser")
+  givenFeedBack     FeedBack[]            @relation("givenFeedbackHasUser")
+  reciveFeedBack    FeedBack[]            @relation("reciveFeedbackHasUser")
+  productWishList   ProductWishList[]     @relation("productWishListHasUser")
+  // user able to login with multiple device
+  firebaseMzgTokens String[]              @db.Text @map(name: "firebase_mzg_token")
+
+  createdAt         DateTime              @default(now()) @map(name: "created_at")
+  updatedAt         DateTime              @default(now()) @map(name: "updated_at")
+  @@map(name: "users")
+}
+
+model Product {
+  id                  Int               @id @default(autoincrement())
+  productType         ProductType       @default(food)
+  isFree              Boolean           @default(true)
+  name                String            @db.Text
+  description         String            @db.Text
+  latitude            Float
+  longitude           Float  
+  expireDate          DateTime?         @map(name: "expire_date")
+  status              ProductStatus     @default(draft)
+  price               Float?
+  point               Float?            @default(2)
+  image               String[]          
+  hostedBy            User              @relation("productHasHostedUser", fields: [hostedUserID], references: [id])
+  hostedUserID        Int               @map(name: "hosted_user_id")
+  productRequests     ProductRequest[]  @relation("productRequestHasProduct")
+  consumeBy           User?             @relation("productHasConsumer", fields: [consumerID], references: [id])
+  consumerID          Int?              @map(name: "consumer_id")
+  userWishList        ProductWishList[] @relation("productWishListHasProduct")
+  productTag          ProductTag[]      @relation("productTagHasProduct")
+
+  hostedAt            DateTime          @default(now()) @map(name: "hosted_at")
+  createdAt           DateTime          @default(now()) @map(name: "created_at")
+  updatedAt           DateTime          @default(now()) @map(name: "updated_at")
+  
+  @@map(name: "product")
+}
+
+model Category {
+  id                Int               @id @default(autoincrement())
+  name              String            @db.Text
+  image             String?           @db.Text
+  productType       ProductType       @default(food)
+  isDeleted         Boolean           @default(false)
+  productTag        ProductTag[]      @relation("productTagHasCategory")
+  createdAt         DateTime          @default(now()) @map(name: "created_at")
+  updatedAt         DateTime          @default(now()) @map(name: "updated_at")
+  
+  @@map(name: "category")
+}
+
+model ProductTag {
+  id                Int               @id @default(autoincrement())
+  isDeleted         Boolean           @default(false)
+  product           Product           @relation("productTagHasProduct", fields: [productID], references: [id])
+  productID         Int               @map(name: "product_id")
+  category          Category          @relation("productTagHasCategory", fields: [categoryID], references: [id])
+  categoryID        Int               @map(name: "category_id")
+  createdAt         DateTime          @default(now()) @map(name: "created_at")
+  updatedAt         DateTime          @default(now()) @map(name: "updated_at")
+  
+  @@map(name: "productTag")
+}
+
+model ProductRequest {
+  id                Int                   @id @default(autoincrement())
+  status            ProductRequstStatus   @default(pending)
+  reason            String?               @db.Text
+  requestBy         User                  @relation("productRequestHasUser", fields: [requestedUserID], references: [id])
+  requestedUserID   Int                   @map(name: "requested_user_id")
+  product           Product               @relation("productRequestHasProduct", fields: [productID], references: [id])
+  productID         Int                   @map(name: "product_id")
+  feedBack          FeedBack[]            @relation("feedbackHasProductRequest")
+  chat              Chat[]                @relation("chatHasProductRequest")
+  createdAt         DateTime              @default(now()) @map(name: "created_at")
+  updatedAt         DateTime              @default(now()) @map(name: "updated_at")
+  
+  @@map(name: "productRequest")
+}
+
+model ProductWishList {
+  id                Int               @id @default(autoincrement())
+  product           Product           @relation("productWishListHasProduct", fields: [productID], references: [id])
+  productID         Int               @map(name: "product_id")
+  createdBy         User              @relation("productWishListHasUser", fields: [createdUserID], references: [id])
+  createdUserID     Int               @map(name: "created_user_id")
+
+  createdAt         DateTime          @default(now()) @map(name: "created_at")
+  updatedAt         DateTime          @default(now()) @map(name: "updated_at")
+  
+  @@map(name: "productWishList")
+}
+
+model FeedBack {
+  id                  Int              @id @default(autoincrement())
+  type                FeedBackType     @default(user)
+  rate                Float
+  description         String?          @db.Text
+
+  productRequest      ProductRequest   @relation("feedbackHasProductRequest", fields: [productRequestID], references: [id])
+  productRequestID    Int              @map(name: "product_request_id")
+  creator             User             @relation("givenFeedbackHasUser", fields: [creatorID], references: [id])
+  creatorID           Int              @map(name: "creator_id")
+  reciver             User             @relation("reciveFeedbackHasUser", fields: [reciverID], references: [id])
+  reciverID           Int              @map(name: "reciver_id")
+
+  createdAt           DateTime         @default(now()) @map(name: "created_at")
+  updatedAt           DateTime         @default(now()) @map(name: "updated_at")
+  
+  @@map(name: "feedback")
+}
+
+model Chat {
+  id                  Int               @id @default(autoincrement())
+  message             String            @db.Text
+  sender              Int
+  receiver            Int
+  isRead              Boolean           @default(false) @map(name: "is_read")
+
+  productRequest      ProductRequest    @relation("chatHasProductRequest", fields: [productRequestID], references: [id])
+  productRequestID    Int               @map(name: "product_request_id")
+
+  createdAt           DateTime          @default(now()) @map(name: "created_at")
+  updatedAt           DateTime          @default(now()) @map(name: "updated_at")
+
+  @@map(name: "organizationChat")
+}
+
+enum UserStates {
+  pending
+  approved
+  reject
+  block
+}
+
+enum FeedBackType {
+  user
+  product
+  queality
+  ontime
+}
+
+enum ProductType {
+  food
+  non_food
+}
+
+enum ProductStatus {
+  draft
+  pending
+  hosted
+  removed
+  given
+}
+
+enum ProductRequstStatus {
+  pending
+  approved
+  reject
+  deleted
+}
+
+enum SignupStatus {
+  pending
+  two_factor_verify
+  compleated
+}
+
+enum UserRoles {
+  admin
+  user
+}
